@@ -11,10 +11,10 @@ exec uv run python -m vllm.entrypoints.openai.api_server \
     --model "$MODEL" \
     --host 0.0.0.0 \
     --port 8000 \
-    --dtype bfloat16 \
-    --max-model-len 8192 \
+    --max-model-len 4096 \
     --max-num-seqs 256 \
     --gpu-memory-utilization 0.95 \
     --enable-prefix-caching \
-    --enable-chunked-prefill \
+    --kv-cache-dtype fp8 \
+    --quantization fp8 \
     --disable-log-requests
