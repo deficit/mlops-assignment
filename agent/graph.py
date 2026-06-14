@@ -54,14 +54,17 @@ class AgentState:
     history: list[dict[str, Any]] = field(default_factory=list)
 
 
+# Cache ChatOpenAI client to reuse connection pool and avoid handshake overhead
+_LLM_CLIENT = ChatOpenAI(
+    model=VLLM_MODEL,
+    base_url=VLLM_BASE_URL,
+    api_key=LLM_API_KEY,
+    temperature=0.0,
+)
+
 def llm() -> ChatOpenAI:
     """Chat client pointed at VLLM_BASE_URL (your local vLLM by default)."""
-    return ChatOpenAI(
-        model=VLLM_MODEL,
-        base_url=VLLM_BASE_URL,
-        api_key=LLM_API_KEY,
-        temperature=0.0,
-    )
+    return _LLM_CLIENT
 
 
 # ---- Nodes ------------------------------------------------------------
