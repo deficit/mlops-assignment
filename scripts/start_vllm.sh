@@ -5,15 +5,12 @@
 
 set -euo pipefail
 
-MODEL="Qwen/Qwen3-30B-A3B-Instruct-2507"
-
-# Disable V1 engine to fall back to the stable V0 engine (prevents torch.compile overhead)
-export VLLM_USE_V1=0
+MODEL="Qwen/Qwen3-30B-A3B-Instruct-2507-FP8"
 
 exec uv run python -m vllm.entrypoints.openai.api_server \
     --model "$MODEL" \
     --host 0.0.0.0 \
     --port 8000 \
     --max-model-len 4096 \
-    --max-num-seqs 128 \
+    --max-num-seqs 256 \
     --gpu-memory-utilization 0.95
