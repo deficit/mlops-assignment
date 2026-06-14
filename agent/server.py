@@ -62,6 +62,8 @@ def answer(req: AnswerRequest) -> AnswerResponse:
     try:
         final = graph.invoke(state, config=config)
     except Exception as e:  # noqa: BLE001
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"{type(e).__name__}: {e}")
 
     sql = final.get("sql", "")
