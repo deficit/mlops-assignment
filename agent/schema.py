@@ -52,8 +52,9 @@ def render_schema(db_id: str) -> str:
                 col_lines.append(line)
             for fk in conn.execute(f"PRAGMA foreign_key_list({_q(t)})"):
                 # (id, seq, ref_table, from, to, on_update, on_delete, match)
+                ref_col = f"({_q(fk[4])})" if fk[4] is not None else ""
                 col_lines.append(
-                    f"  FOREIGN KEY ({_q(fk[3])}) REFERENCES {_q(fk[2])}({_q(fk[4])})"
+                    f"  FOREIGN KEY ({_q(fk[3])}) REFERENCES {_q(fk[2])}{ref_col}"
                 )
             parts.append(",\n".join(col_lines))
             parts.append(");")
