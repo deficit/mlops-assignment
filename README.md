@@ -69,7 +69,7 @@ ssh -L 3000:localhost:3000 \
     -L 3001:localhost:3001 \
     -L 8000:localhost:8000 \
     -L 8001:localhost:8001 \
-    <user>@<vm-host>
+    anatoly@89.169.123.106
 ```
 
   
