@@ -84,7 +84,7 @@ def _extract_sql(text: str) -> str:
     return (fenced.group(1) if fenced else text).strip()
 
 
-def generate_sql_node(state: AgentState) -> dict:
+async def generate_sql_node(state: AgentState) -> dict:
     """Worked example - the other LLM nodes follow this same shape.
 
     Build messages from the prompts, call the shared llm(), extract the SQL,
@@ -94,7 +94,7 @@ def generate_sql_node(state: AgentState) -> dict:
     This node is wired and ready; fill in GENERATE_SQL_SYSTEM / GENERATE_SQL_USER
     in prompts.py to make it produce real queries.
     """
-    response = llm().invoke([
+    response = await llm().ainvoke([
         ("system", prompts.GENERATE_SQL_SYSTEM),
         ("user", prompts.GENERATE_SQL_USER.format(
             schema=state.schema,
@@ -114,7 +114,7 @@ def execute_node(state: AgentState) -> dict:
     return {"execution": execute_sql(state.db_id, state.sql)}
 
 
-def verify_node(state: AgentState) -> dict:
+async def verify_node(state: AgentState) -> dict:
     """Decide whether state.execution plausibly answers state.question.
 
     Follow the generate_sql_node pattern: build messages from the VERIFY_*
@@ -129,7 +129,7 @@ def verify_node(state: AgentState) -> dict:
     """
     execution_result_str = state.execution.render() if state.execution else "No execution result."
     
-    response = llm().invoke([
+    response = await llm().ainvoke([
         ("system", prompts.VERIFY_SYSTEM),
         ("user", prompts.VERIFY_USER.format(
             schema=state.schema,
@@ -167,7 +167,7 @@ def verify_node(state: AgentState) -> dict:
     }
 
 
-def revise_node(state: AgentState) -> dict:
+async def revise_node(state: AgentState) -> dict:
     """Produce a revised SQL query given state.verify_issue and the prior attempt.
 
     Same shape as generate_sql_node, but the prompt should include the failing
@@ -179,7 +179,7 @@ def revise_node(state: AgentState) -> dict:
     """
     execution_result_str = state.execution.render() if state.execution else "No execution result."
     
-    response = llm().invoke([
+    response = await llm().ainvoke([
         ("system", prompts.REVISE_SYSTEM),
         ("user", prompts.REVISE_USER.format(
             schema=state.schema,
