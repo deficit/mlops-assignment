@@ -198,6 +198,20 @@ async def revise_node(state: AgentState) -> dict:
     }
 
 
+def route_after_execute(state: AgentState) -> str:
+    """Hybrid Router: Decide whether to verify the query or skip to the end.
+    
+    If the SQL executed successfully and returned rows, we assume it's correct
+    and terminate immediately to save E2E latency.
+    If the SQL failed (syntax error) or returned 0 rows, we run the verifier.
+    """
+    if state.iteration >= MAX_ITERATIONS:
+        return "end"
+    if not state.execution or not state.execution.ok or not state.execution.rows:
+        return "verify"
+    return "end"
+
+
 def route_after_verify(state: AgentState) -> str:
     """Conditional router: return "revise" to loop, "end" to terminate.
 
@@ -224,7 +238,11 @@ def build_graph():
     g.add_edge(START, "attach_schema")
     g.add_edge("attach_schema", "generate_sql")
     g.add_edge("generate_sql", "execute")
-    g.add_edge("execute", "verify")
+    g.add_conditional_edges(
+        "execute",
+        route_after_execute,
+        {"verify": "verify", "end": END},
+    )
     g.add_conditional_edges(
         "verify",
         route_after_verify,
