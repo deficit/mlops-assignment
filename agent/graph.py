@@ -60,6 +60,7 @@ _LLM_CLIENT = ChatOpenAI(
     base_url=VLLM_BASE_URL,
     api_key=LLM_API_KEY,
     temperature=0.0,
+    max_tokens=150,
 )
 
 def llm() -> ChatOpenAI:
