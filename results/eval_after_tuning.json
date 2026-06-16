@@ -1,13 +1,13 @@
 {
   "summary": {
     "total_questions": 30,
-    "avg_iterations": 1.8666666666666667,
-    "final_accuracy": 0.43333333333333335,
+    "avg_iterations": 1.7666666666666666,
+    "final_accuracy": 0.5,
     "accuracy_iter_0": 0.3333333333333333,
-    "accuracy_iter_1": 0.4,
-    "accuracy_iter_2": 0.43333333333333335
+    "accuracy_iter_1": 0.5,
+    "accuracy_iter_2": 0.5
   },
-  "wall_clock_seconds": 59.87469112499093,
+  "wall_clock_seconds": 43.774875062999854,
   "results": [
     {
       "question": "What is the coordinates location of the circuits for Australian grand prix?",
@@ -65,11 +65,11 @@
       "question": "How many male clients in 'Hl.m. Praha' district?",
       "db_id": "financial",
       "gold_sql": "SELECT COUNT(T1.client_id) FROM client AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE T1.gender = 'M' AND T2.A2 = 'Hl.m. Praha'",
-      "final_sql": "SELECT COUNT(*) \nFROM client c\nJOIN district d ON c.district_id = d.district_id\nWHERE c.gender = 'M' AND d.A2 = 'Hl.m. Praha';",
-      "iterations_taken": 3,
+      "final_sql": "SELECT COUNT(*) \nFROM client c\nJOIN district d ON c.district_id = d.district_id\nWHERE c.gender = 'M' \n  AND d.A2 = 'Hl.m. Praha';",
+      "iterations_taken": 2,
       "correct_by_iter": [
         false,
-        false,
+        true,
         true
       ],
       "final_correct": true
@@ -78,11 +78,11 @@
       "question": "What is the average fastest lap time in seconds for Lewis Hamilton in all the Formula_1 races?",
       "db_id": "formula_1",
       "gold_sql": "SELECT AVG(CAST(SUBSTR(T2.fastestLapTime, 1, INSTR(T2.fastestLapTime, ':') - 1) AS INTEGER) * 60 + CAST(SUBSTR(T2.fastestLapTime, INSTR(T2.fastestLapTime, ':') + 1) AS REAL)) FROM drivers AS T1 INNER JOIN results AS T2 ON T1.driverId = T2.driverId WHERE T1.surname = 'Hamilton' AND T1.forename = 'Lewis'",
-      "final_sql": "SELECT AVG(CAST(SUBSTR(r.fastestLapTime, 1, 2) AS REAL) * 60 + \n           CAST(SUBSTR(r.fastestLapTime, 4, 2) AS REAL) + \n           CAST(SUBSTR(r.fastestLapTime, 7, 3) AS REAL) / 1000) AS average_fastest_lap_seconds\nFROM results r\nJOIN drivers d ON r.driverId = d.driverId\nWHERE d.forename = 'Lewis' AND d.surname = 'Hamilton' AND r.fastestLapTime IS NOT NULL;",
-      "iterations_taken": 2,
+      "final_sql": "```sql\nSELECT AVG(\n  CASE \n    WHEN INSTR(r.fastestLapTime, ':') > 0 THEN\n      CAST(SUBSTR(r.fastestLapTime, 1, INSTR(r.fastestLapTime, ':') - 1) AS REAL) * 60 +\n      CAST(SUBSTR(r.fastestLapTime, INSTR(r.fastestLapTime, ':') + 1, 2) AS REAL) +\n      CAST(SUBSTR(r.fastestLapTime, INSTR(r.fastestLapTime, ':') + 4, 3) AS REAL) / 1000.0\n    ELSE\n      CAST(r.fastestL",
+      "iterations_taken": 3,
       "correct_by_iter": [
         false,
-        false,
+        true,
         false
       ],
       "final_correct": false
@@ -104,8 +104,8 @@
       "question": "Calculate the difference of the total amount spent in all events by the Student_Club in year 2019 and 2020.",
       "db_id": "student_club",
       "gold_sql": "SELECT SUM(CASE WHEN SUBSTR(T1.event_date, 1, 4) = '2019' THEN T2.spent ELSE 0 END) - SUM(CASE WHEN SUBSTR(T1.event_date, 1, 4) = '2020' THEN T2.spent ELSE 0 END) AS num FROM event AS T1 INNER JOIN budget AS T2 ON T1.event_id = T2.link_to_event",
-      "final_sql": "SELECT \n  ABS(\n    COALESCE((SELECT SUM(b.spent) FROM budget b JOIN event e ON b.link_to_event = e.event_id WHERE e.event_date LIKE '2019-%'), 0) -\n    COALESCE((SELECT SUM(b.spent) FROM budget b JOIN event e ON b.link_to_event = e.event_id WHERE e.event_date LIKE '2020-%'), 0)\n  ) AS difference",
-      "iterations_taken": 2,
+      "final_sql": "SELECT \n  (SELECT COALESCE(SUM(b.spent), 0) \n   FROM budget b \n   JOIN event e ON b.link_to_event = e.event_id \n   WHERE strftime('%Y', e.event_date) = '2019') -\n  (SELECT COALESCE(SUM(b.spent), 0) \n   FROM budget b \n   JOIN event e ON b.link_to_event = e.event_id \n   WHERE strftime('%Y', e.event_date) = '2020') AS difference;",
+      "iterations_taken": 1,
       "correct_by_iter": [
         true,
         true,
@@ -117,7 +117,7 @@
       "question": "What is the complete address of the school with the lowest excellence rate? Indicate the Street, City, Zip and State.",
       "db_id": "california_schools",
       "gold_sql": "SELECT T2.Street, T2.City, T2.State, T2.Zip FROM satscores AS T1 INNER JOIN schools AS T2 ON T1.cds = T2.CDSCode ORDER BY CAST(T1.NumGE1500 AS REAL) / T1.NumTstTakr ASC LIMIT 1",
-      "final_sql": "SELECT s.Street, s.City, s.Zip, s.State\nFROM schools s\nJOIN satscores ss ON s.CDSCode = ss.cds\nORDER BY ss.NumGE1500 / ss.enroll12 ASC\nLIMIT 1;",
+      "final_sql": "SELECT s.Street, s.City, s.Zip, s.State\nFROM schools s\nJOIN satscores ss ON s.CDSCode = ss.cds\nORDER BY ss.NumGE1500 / ss.NumTstTakr ASC\nLIMIT 1;",
       "iterations_taken": 1,
       "correct_by_iter": [
         false,
@@ -130,7 +130,7 @@
       "question": "Calculate the percentage of carcinogenic molecules which contain the Chlorine element.",
       "db_id": "toxicology",
       "gold_sql": "SELECT COUNT(CASE WHEN T2.label = '+' AND T1.element = 'cl' THEN T2.molecule_id ELSE NULL END) * 100 / COUNT(T2.molecule_id) FROM atom AS T1 INNER JOIN molecule AS T2 ON T1.molecule_id = T2.molecule_id",
-      "final_sql": "SELECT \n    (COUNT(CASE WHEN m.label = 'carcinogenic' AND UPPER(a.element) = 'CL' THEN 1 END) * 100.0 / \n     NULLIF(COUNT(CASE WHEN m.label = 'carcinogenic' THEN 1 END), 0)) AS percentage\nFROM molecule m\nJOIN atom a ON m.molecule_id = a.molecule_id\nWHERE m.label = 'carcinogenic';",
+      "final_sql": "SELECT \n    (COUNT(CASE WHEN m.label = 'carcinogenic' THEN 1 END) * 100.0 / \n     COUNT(*)) AS percentage\nFROM \n    molecule m\nJOIN \n    atom a ON m.molecule_id = a.molecule_id\nWHERE \n    a.element = 'Cl';",
       "iterations_taken": 3,
       "correct_by_iter": [
         false,
@@ -143,10 +143,10 @@
       "question": "How many users received commentator badges in 2014?",
       "db_id": "codebase_community",
       "gold_sql": "SELECT COUNT(Id) FROM badges WHERE Name = 'Commentator' AND STRFTIME('%Y', Date) = '2014'",
-      "final_sql": "SELECT COUNT(DISTINCT b.UserId)\nFROM badges b\nWHERE b.Name = 'Commentator'\n  AND strftime('%Y', b.Date) = '2014';",
-      "iterations_taken": 1,
+      "final_sql": "SELECT COUNT(DISTINCT UserId)\nFROM badges\nWHERE Name = 'Commentator'\n  AND strftime('%Y', Date) = '2014';",
+      "iterations_taken": 2,
       "correct_by_iter": [
-        true,
+        false,
         true,
         true
       ],
@@ -156,20 +156,20 @@
       "question": "Among the patients with a normal Ig G level, how many of them have symptoms?",
       "db_id": "thrombosis_prediction",
       "gold_sql": "SELECT COUNT(T1.ID) FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID INNER JOIN Examination AS T3 ON T3.ID = T2.ID WHERE T2.IGG BETWEEN 900 AND 2000 AND T3.Symptoms IS NOT NULL",
-      "final_sql": "SELECT COUNT(*) \nFROM Examination e\nJOIN Patient p ON e.ID = p.ID\nWHERE e.\"aCL IgG\" IS NOT NULL \n  AND e.\"aCL IgG\" <= 20\n  AND e.\"Symptoms\" IS NOT NULL;",
+      "final_sql": "SELECT COUNT(*) \nFROM \"Patient\" p\nJOIN \"Laboratory\" l ON p.\"ID\" = l.\"ID\"\nJOIN \"Examination\" e ON p.\"ID\" = e.\"ID\"\nWHERE l.\"IGG\" IS NOT NULL \n  AND l.\"IGG\" >= 0 \n  AND e.\"Symptoms\" IS NOT NULL",
       "iterations_taken": 3,
       "correct_by_iter": [
         false,
         false,
-        false
+        true
       ],
-      "final_correct": false
+      "final_correct": true
     },
     {
       "question": "How many superheroes have the super power of \"Super Strength\"?",
       "db_id": "superhero",
       "gold_sql": "SELECT COUNT(T1.hero_id) FROM hero_power AS T1 INNER JOIN superpower AS T2 ON T1.power_id = T2.id WHERE T2.power_name = 'Super Strength'",
-      "final_sql": "SELECT COUNT(*) \nFROM superhero s\nJOIN hero_power hp ON s.id = hp.hero_id\nJOIN superpower p ON hp.power_id = p.id\nWHERE p.power_name = 'Super Strength';",
+      "final_sql": "SELECT COUNT(DISTINCT s.id) \nFROM superhero s\nJOIN hero_power hp ON s.id = hp.hero_id\nJOIN superpower p ON hp.power_id = p.id\nWHERE p.power_name = 'Super Strength';",
       "iterations_taken": 1,
       "correct_by_iter": [
         true,
@@ -195,7 +195,7 @@
       "question": "For all patients with normal uric acid (UA), what is the average UA index based on their latest laboratory examination result?",
       "db_id": "thrombosis_prediction",
       "gold_sql": "SELECT AVG(T2.UA) FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID WHERE (T2.UA < 6.5 AND T1.SEX = 'F') OR (T2.UA < 8.0 AND T1.SEX = 'M') AND T2.Date = ( SELECT MAX(Date) FROM Laboratory )",
-      "final_sql": "SELECT AVG(l.\"UA\") AS average_UA\nFROM \"Laboratory\" l\nJOIN \"Patient\" p ON l.\"ID\" = p.\"ID\"\nWHERE l.\"UA\" BETWEEN 3.0 AND 7.0\n  AND l.\"Date\" = (\n    SELECT MAX(l2.\"Date\")\n    FROM \"Laboratory\" l2\n    WHERE l2.\"ID\" = l.\"ID\"\n  );",
+      "final_sql": "SELECT AVG(l.\"UA\") AS average_UA\nFROM \"Laboratory\" l\nJOIN \"Patient\" p ON l.\"ID\" = p.\"ID\"\nWHERE l.\"UA\" IS NOT NULL\n  AND l.\"UA\" BETWEEN 3.0 AND 7.0\n  AND l.\"Date\" = (\n    SELECT MAX(l2.\"Date\")\n    FROM \"Laboratory\" l2\n    WHERE l2.\"ID\" = l.\"ID\"\n  );",
       "iterations_taken": 1,
       "correct_by_iter": [
         false,
@@ -208,8 +208,8 @@
       "question": "User No.23853 gave a comment to a post at 9:08:18 on 2013/7/12, was that post well-finished?",
       "db_id": "codebase_community",
       "gold_sql": "SELECT IIF(T2.ClosedDate IS NULL, 'NOT well-finished', 'well-finished') AS resylt FROM comments AS T1 INNER JOIN posts AS T2 ON T1.PostId = T2.Id WHERE T1.UserId = 23853 AND T1.CreationDate = '2013-07-12 09:08:18.0'",
-      "final_sql": "SELECT p.Title, p.CommunityOwnedDate, p.ClosedDate\nFROM posts p\nJOIN comments c ON p.Id = c.PostId\nWHERE c.UserId = 23853\n  AND c.CreationDate LIKE '2013-07-12 09:08:18%';",
-      "iterations_taken": 2,
+      "final_sql": "SELECT p.Title, \n       CASE \n           WHEN p.AcceptedAnswerId IS NOT NULL THEN 'Yes'\n           ELSE 'No'\n       END AS WellFinished\nFROM posts p\nJOIN comments c ON p.Id = c.PostId\nWHERE c.UserId = 23853\n  AND c.CreationDate LIKE '2013-07-12 09:08:18%'",
+      "iterations_taken": 3,
       "correct_by_iter": [
         false,
         false,
@@ -247,10 +247,10 @@
       "question": "Which active district has the highest average score in Reading?",
       "db_id": "california_schools",
       "gold_sql": "SELECT T1.District FROM schools AS T1 INNER JOIN satscores AS T2 ON T1.CDSCode = T2.cds WHERE T1.StatusType = 'Active' ORDER BY T2.AvgScrRead DESC LIMIT 1",
-      "final_sql": "SELECT s.District\nFROM schools s\nJOIN satscores sc ON s.CDSCode = sc.cds\nWHERE s.StatusType = 'Active'\n  AND s.District NOT LIKE '%County Office%'\nGROUP BY s.District\nORDER BY AVG(sc.AvgScrRead) DESC\nLIMIT 1;",
-      "iterations_taken": 2,
+      "final_sql": "SELECT dname\nFROM satscores s\nJOIN schools sc ON s.cds = sc.CDSCode\nWHERE sc.StatusType = 'Active'\nORDER BY s.AvgScrRead DESC\nLIMIT 1;",
+      "iterations_taken": 1,
       "correct_by_iter": [
-        false,
+        true,
         true,
         true
       ],
@@ -286,8 +286,8 @@
       "question": "In superheroes with missing weight data, calculate the difference between the number of superheroes with blue eyes and no eye color.",
       "db_id": "superhero",
       "gold_sql": "SELECT SUM(CASE WHEN T2.id = 7 THEN 1 ELSE 0 END) - SUM(CASE WHEN T2.id = 1 THEN 1 ELSE 0 END) FROM superhero AS T1 INNER JOIN colour AS T2 ON T1.eye_colour_id = T2.id WHERE T1.weight_kg = 0 OR T1.weight_kg is NULL",
-      "final_sql": "SELECT \n  COUNT(CASE WHEN c.colour = 'Blue' THEN 1 END) - \n  COUNT(CASE WHEN c.colour = 'Unknown' THEN 1 END) AS difference\nFROM superhero s\nJOIN colour c ON s.eye_colour_id = c.id\nWHERE s.weight_kg IS NULL;",
-      "iterations_taken": 3,
+      "final_sql": "SELECT \n    (SELECT COUNT(*) FROM superhero s \n     JOIN colour c ON s.eye_colour_id = c.id \n     WHERE s.weight_kg IS NULL AND c.colour = 'blue') -\n    (SELECT COUNT(*) FROM superhero s \n     WHERE s.weight_kg IS NULL AND s.eye_colour_id IS NULL) AS difference;",
+      "iterations_taken": 1,
       "correct_by_iter": [
         false,
         false,
@@ -325,7 +325,7 @@
       "question": "List all patients who were followed up at the outpatient clinic who underwent a laboratory test in October 1991 and had a total blood bilirubin level within the normal range.",
       "db_id": "thrombosis_prediction",
       "gold_sql": "SELECT DISTINCT T1.ID FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID WHERE T1.Admission = '-' AND T2.`T-BIL` < 2.0 AND T2.Date LIKE '1991-10-%'",
-      "final_sql": "SELECT DISTINCT p.*\nFROM Patient p\nJOIN Laboratory l ON p.ID = l.ID\nWHERE p.Admission = 'outpatient clinic'\n  AND l.Date BETWEEN '1991-10-01' AND '1991-10-31'\n  AND l.\"T-BIL\" REGEXP '^[0-9]+\\\\.[0-9]+$'\n  AND CAST(l.\"T-BIL\" AS REAL) BETWEEN 0.2 AND 1.2;",
+      "final_sql": "SELECT DISTINCT p.*\nFROM Patient p\nJOIN Laboratory l ON p.ID = l.ID\nWHERE UPPER(p.Admission) = 'OUTPATIENT CLINIC'\n  AND l.Date BETWEEN '1991-10-01' AND '1991-10-31'\n  AND l.\"T-BIL\" REGEXP '^[0-9]+\\\\.[0-9]+$'\n  AND CAST(l.\"T-BIL\" AS REAL) BETWEEN 0.2 AND 1.2;",
       "iterations_taken": 3,
       "correct_by_iter": [
         false,
@@ -338,7 +338,7 @@
       "question": "Among the molecules with element Calcium, are they mostly carcinogenic or non carcinogenic?",
       "db_id": "toxicology",
       "gold_sql": "SELECT T2.label FROM atom AS T1 INNER JOIN molecule AS T2 ON T1.molecule_id = T2.molecule_id WHERE T1.element = 'ca' GROUP BY T2.label ORDER BY COUNT(T2.label) DESC LIMIT 1",
-      "final_sql": "SELECT \n    CASE \n        WHEN m.label = 'carcinogenic' THEN 'carcinogenic'\n        ELSE 'non carcinogenic'\n    END AS carcinogenic_status,\n    COUNT(*) AS count\nFROM molecule m\nJOIN atom a ON m.molecule_id = a.molecule_id\nWHERE a.element = 'calcium'\nGROUP BY carcinogenic_status\nORDER BY count DESC\nLIMIT 1;",
+      "final_sql": "SELECT \n    CASE \n        WHEN m.label = 'carcinogenic' THEN 'carcinogenic'\n        WHEN m.label = 'non-carcinogenic' THEN 'non carcinogenic'\n        ELSE 'unknown'\n    END AS carcinogenic_status,\n    COUNT(*) AS count\nFROM molecule m\nJOIN atom a ON m.molecule_id = a.molecule_id\nWHERE a.element = 'CALCIUM'\nGROUP BY carcinogenic_status\nORDER BY count DESC\nLIMIT 1;",
       "iterations_taken": 3,
       "correct_by_iter": [
         false,
@@ -351,7 +351,7 @@
       "question": "Please list the full names of the students in the Student_Club that come from the Art and Design Department.",
       "db_id": "student_club",
       "gold_sql": "SELECT T1.first_name, T1.last_name FROM member AS T1 INNER JOIN major AS T2 ON T1.link_to_major = T2.major_id WHERE T2.department = 'Art and Design Department'",
-      "final_sql": "SELECT m.first_name || ' ' || m.last_name AS full_name\nFROM member m\nJOIN major maj ON m.link_to_major = maj.major_id\nWHERE LOWER(maj.department) = 'art and design';",
+      "final_sql": "SELECT m.first_name || ' ' || m.last_name AS full_name\nFROM member m\nJOIN major maj ON m.link_to_major = maj.major_id\nWHERE maj.department = 'Art and Design';",
       "iterations_taken": 3,
       "correct_by_iter": [
         false,
@@ -364,7 +364,7 @@
       "question": "List all the mythic rarity print cards banned in gladiator format.",
       "db_id": "card_games",
       "gold_sql": "SELECT DISTINCT T1.id FROM cards AS T1 INNER JOIN legalities AS T2 ON T1.uuid = T2.uuid WHERE T2.format = 'gladiator' AND T2.status = 'Banned' AND T1.rarity = 'mythic'",
-      "final_sql": "SELECT c.name\nFROM cards c\nJOIN legalities l ON c.uuid = l.uuid\nWHERE c.rarity = 'mythic'\n  AND l.format = 'Gladiator'\n  AND l.status = 'banned';",
+      "final_sql": "SELECT DISTINCT c.name\nFROM cards c\nJOIN legalities l ON c.uuid = l.uuid\nWHERE UPPER(c.rarity) = 'MYTHIC'\n  AND UPPER(l.format) = 'GLADIATOR'\n  AND UPPER(l.status) = 'BANNED';",
       "iterations_taken": 3,
       "correct_by_iter": [
         false,
@@ -390,14 +390,14 @@
       "question": "Mention the reputation of users who had obtained the badge on 7/19/2010 7:39:08 PM.",
       "db_id": "codebase_community",
       "gold_sql": "SELECT T1.Reputation FROM users AS T1 INNER JOIN badges AS T2 ON T1.Id = T2.UserId WHERE T2.Date = '2010-07-19 19:39:08.0'",
-      "final_sql": "SELECT u.Reputation\nFROM users u\nJOIN badges b ON u.Id = b.UserId\nWHERE b.Date = '2010-07-19 19:39:08';",
-      "iterations_taken": 3,
+      "final_sql": "SELECT u.Reputation\nFROM users u\nJOIN badges b ON u.Id = b.UserId\nWHERE b.Date LIKE '2010-07-19 19:39:08%'",
+      "iterations_taken": 2,
       "correct_by_iter": [
         false,
-        false,
-        false
+        true,
+        true
       ],
-      "final_correct": false
+      "final_correct": true
     }
   ]
 }

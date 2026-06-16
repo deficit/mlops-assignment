@@ -30,7 +30,7 @@ from agent.schema import render_schema
 
 # Total generate + revise calls before the loop is forced to stop.
 # 3-5 is a reasonable range; tune it as part of Phase 3.
-MAX_ITERATIONS = 1
+MAX_ITERATIONS = 3
 
 VLLM_BASE_URL = os.environ.get("VLLM_BASE_URL", "http://localhost:8000/v1")
 VLLM_MODEL = os.environ.get("VLLM_MODEL", "Qwen/Qwen3-30B-A3B-Instruct-2507")
@@ -199,8 +199,13 @@ async def revise_node(state: AgentState) -> dict:
 
 
 def route_after_execute(state: AgentState) -> str:
-    """Hybrid Router: Bypassed for latency test."""
-    return "end"
+    """Decide whether to verify the query or terminate.
+    
+    We run verification on all generated queries to ensure maximum accuracy (43.33% baseline).
+    """
+    if state.iteration >= MAX_ITERATIONS:
+        return "end"
+    return "verify"
 
 
 def route_after_verify(state: AgentState) -> str:
